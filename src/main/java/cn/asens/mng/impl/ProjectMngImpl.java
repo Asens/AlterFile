@@ -66,7 +66,7 @@ public class ProjectMngImpl implements ProjectMng {
 
         List<File> list=new ArrayList<>();
         scanFile(file,list);
-        list.forEach(projectFile->saveProjectFile(projectFile,project)) ;
+        list.forEach(projectFile->saveProjectFile(projectFile,project,ProjectFile.STATUS_DEFAULT)) ;
         project.setInitialized(Project.HAS_INITIALIZED);
         projectDao.update(project);
     }
@@ -100,7 +100,7 @@ public class ProjectMngImpl implements ProjectMng {
 
         for(File file:curList){
             if(!fileInList(file,list)){
-                ProjectFile pf=saveProjectFile(file,project);
+                ProjectFile pf=saveProjectFile(file,project,ProjectFile.STATUS_ADD);
                 resultList.add(pf);
             }
         }
@@ -134,12 +134,12 @@ public class ProjectMngImpl implements ProjectMng {
         return false;
     }
 
-    private ProjectFile saveProjectFile(File projectFile,Project project) {
+    private ProjectFile saveProjectFile(File projectFile,Project project,Integer status) {
         ProjectFile pf=new ProjectFile();
         pf.setAbsolutePath(projectFile.getAbsolutePath());
         pf.setFileName(projectFile.getName());
         pf.setLastModify(projectFile.lastModified());
-        pf.setStatus(ProjectFile.STATUS_ADD);
+        pf.setStatus(status);
         pf.setProjectId(project.getId());
         projectFileDao.save(pf);
         return pf;

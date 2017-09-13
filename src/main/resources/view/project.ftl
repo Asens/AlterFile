@@ -125,10 +125,10 @@
     }
 
     $(document).ready(function(){
-        refreshList();
-        setInterval(function(){
-            refreshList();
-        },30000);
+//        refreshList();
+//        setInterval(function(){
+//            refreshList();
+//        },30000);
     })
 </script>
 </body>

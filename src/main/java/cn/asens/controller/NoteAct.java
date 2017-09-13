@@ -12,6 +12,7 @@ import javax.annotation.Resource;
 /**
  * Created by Asens on 2017/7/13
  */
+
 @RestController
 public class NoteAct {
 
@@ -21,10 +22,7 @@ public class NoteAct {
     @GetMapping("/service")
     public String service(){
         User user=userDao.findByaaId();
+        System.out.println();
         return user.getName()+"--"+user.getId();
     }
-
-
-
-
 }

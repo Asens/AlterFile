@@ -16,7 +16,51 @@
     <script src="/semantic/semantic.min.js"></script>
     <script src="/layer/layer.js"></script>
 
+    <style>
+        .newList{
+            color: #0a7700;
+            width: 100%;
+            padding: 5px;
+            font-size: 16px
+        }
 
+        .newList i{
+            margin-left: 10px;
+            cursor: pointer;
+            color: #2185D0;
+        }
+
+        .newList i:hover{
+            color: #0d71bb;
+        }
+
+        .newList p{
+            color: #888;
+            padding: 10px 0;
+        }
+
+        .changeList{
+            color: #2185D0;
+            width: 100%;
+            padding: 5px;
+            font-size: 16px
+        }
+
+        .changeList i{
+            margin-left: 10px;
+            cursor: pointer;
+            color: #2185D0;
+        }
+
+        .changeList i:hover{
+            color: #0d71bb;
+        }
+
+        .changeList p{
+            color: #888;
+            padding: 10px 0;
+        }
+    </style>
 
 </head>
 
@@ -30,6 +74,8 @@
 
                 <p style="color: #888"> 项目路径 : ${project.basePath}</p>
 
+                [#if project.excludePath??]<p style="color: #888"> 排除路径 : ${project.excludePath}</p>[/#if]
+
                 [#if project.initialized==0]
                 <button class="ui primary button" onclick="initProject('${project.id}')">
                     初始化
@@ -41,12 +87,14 @@
 
         <div class="row ui grid" style="padding-top: 40px;">
             <div class="sixteen wide column ">
-
                 <button class="ui primary button" onclick="refreshList()">
                     更新列表
                 </button>
                 <button class="ui red button" onclick="cancelAll()">
                     全部还原
+                </button>
+                <button class="ui teal button" onclick="location.href='/project/${project.id}/edit'">
+                    配置
                 </button>
                 <button class="ui orange button" onclick="cancelAll()">
                     生成更新文档

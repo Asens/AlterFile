@@ -24,6 +24,9 @@ public class Project {
     @Column
     private Integer initialized;
 
+    @Column(name="exclude_path")
+    private String excludePath;
+
     @OneToMany(targetEntity = Project.class,fetch = FetchType.LAZY)
     @JoinColumn(name="project_id")
     private Set<ProjectFile> fileSet;
@@ -66,5 +69,13 @@ public class Project {
 
     public void setInitialized(Integer initialized) {
         this.initialized = initialized;
+    }
+
+    public String getExcludePath() {
+        return excludePath;
+    }
+
+    public void setExcludePath(String excludePath) {
+        this.excludePath = excludePath;
     }
 }

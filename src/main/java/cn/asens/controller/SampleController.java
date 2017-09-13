@@ -36,16 +36,10 @@ import java.util.Map;
 public class SampleController {
     private static Logger log= LogManager.getLogger(SampleController.class);
 
-    private String name;
-
-    @Resource
-    private UserDao userDao;
-
     @Resource
     private ProjectMng projectMng;
 
-    @Resource
-    private ProjectFileMng projectFileMng;
+
 
     @RequestMapping("/")
     public String home(ModelMap model) {
@@ -117,7 +111,20 @@ public class SampleController {
         response.getWriter().write("success");
     }
 
+    @RequestMapping("/project/{id}/edit")
+    public String edit(@PathVariable Integer id, HttpServletResponse response,ModelMap model) throws IOException {
+        Project project=projectMng.findById(id);
+        model.put("project",project);
+        return "project/edit";
+    }
 
+    @RequestMapping("/project/{id}/update")
+    public String update(@PathVariable Integer id,String excludePath, HttpServletResponse response,ModelMap model) throws IOException {
+        Project project=projectMng.findById(id);
+        project.setExcludePath(excludePath);
+        projectMng.update(project);
+        return "redirect:/project/"+id;
+    }
 
 
 

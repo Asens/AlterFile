@@ -1,4 +1,15 @@
+
+
 [#list list as file]
-<p style="color: #0d71bb">${file.fileName}</p>
-<p style="color: #888">${file.absolutePath!}</p>
+<div class="changeList" >
+    <span>${file.fileName}</span>
+
+    <i class="ui icon download" onclick="location.href='/download/${file.id}'"></i>
+
+    <i class="ui icon refresh"></i>
+
+    <i class="ui icon send"></i>
+
+    <p >${file.absolutePath!}</p>
+</div>
 [/#list]

@@ -5,6 +5,7 @@ import cn.asens.dao.ProjectFileDao;
 import cn.asens.entity.Project;
 import cn.asens.entity.ProjectFile;
 import cn.asens.mng.ProjectMng;
+import cn.asens.util.StringUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,7 +66,7 @@ public class ProjectMngImpl implements ProjectMng {
         }
 
         List<File> list=new ArrayList<>();
-        scanFile(file,list);
+        scanFile(file,list,project.getExcludePath());
         list.forEach(projectFile->saveProjectFile(projectFile,project,ProjectFile.STATUS_DEFAULT)) ;
         project.setInitialized(Project.HAS_INITIALIZED);
         projectDao.update(project);
@@ -76,7 +77,7 @@ public class ProjectMngImpl implements ProjectMng {
     @Override
     public List<ProjectFile> changeList(Project project) throws IOException {
         List<File> curList=new ArrayList<>();
-        scanFile(new File(project.getBasePath()),curList);
+        scanFile(new File(project.getBasePath()),curList,project.getExcludePath());
         List<ProjectFile> list=projectFileDao.getListByProjectId(project.getId());
         return list.stream().filter(projectFile->isChange(projectFile,curList)).collect(toList());
     }
@@ -84,7 +85,7 @@ public class ProjectMngImpl implements ProjectMng {
     @Override
     public List<ProjectFile> newList(Project project) throws IOException {
         List<File> curList=new ArrayList<>();
-        scanFile(new File(project.getBasePath()),curList);
+        scanFile(new File(project.getBasePath()),curList,project.getExcludePath());
         List<ProjectFile> list=projectFileDao.getListByProjectId(project.getId());
         List<ProjectFile> newList=projectFileDao.getNewList();
         List<ProjectFile> resultList;
@@ -112,7 +113,7 @@ public class ProjectMngImpl implements ProjectMng {
         List<ProjectFile> list=projectFileDao.getModifyList(projectId);
         Project project=projectDao.findById(projectId);
         List<File> curList=new ArrayList<>();
-        scanFile(new File(project.getBasePath()),curList);
+        scanFile(new File(project.getBasePath()),curList,project.getExcludePath());
 
         list.forEach(projectFile->{
             for(File file:curList){
@@ -145,16 +146,43 @@ public class ProjectMngImpl implements ProjectMng {
         return pf;
     }
 
-    private void scanFile(File file, List<File> list) throws IOException {
+    private void scanFile(File file, List<File> list,String excludePath) throws IOException {
         if(file.isDirectory()){
             File[] files = file.listFiles();
             if(files==null) throw new IOException();
             for(File child:files){
-                scanFile(child,list);
+                scanFile(child,list,excludePath);
             }
         }else{
+            if(matchExcludePath(file.getAbsolutePath(),excludePath)){
+                return;
+            }
             list.add(file);
         }
+    }
+
+    private boolean matchExcludePath(String absolutePath, String excludePath) {
+        if(!excludePath.contains(";")){
+            return doMatchExcludePath(absolutePath,excludePath);
+        }
+
+        String[] arr=excludePath.split(";");
+        for(String ex:arr){
+            if(StringUtils.isBlank(ex)) continue;
+            if(doMatchExcludePath(absolutePath,ex)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean doMatchExcludePath(String absolutePath, String ex) {
+        if(ex.startsWith("*.")){
+            ex=ex.replace("*","");
+            return absolutePath.endsWith(ex);
+        }
+        return false;
     }
 
     private boolean isChange(ProjectFile projectFile, List<File> list) {

@@ -116,6 +116,22 @@
 
 <script>
 
+    function pushToServer(id){
+        $.ajax({
+            url:"/push/"+id,
+            data:{
+                id:id
+            },
+            success:function(data){
+                if(data=='success'){
+                    layer.msg("推送成功");
+                }else{
+                    layer.msg("推送失败");
+                }
+            }
+        })
+    }
+
     function refreshList(){
         getChangeList();
         getNewList();

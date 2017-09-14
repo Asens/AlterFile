@@ -162,6 +162,10 @@ public class ProjectMngImpl implements ProjectMng {
     }
 
     private boolean matchExcludePath(String absolutePath, String excludePath) {
+        if(StringUtils.isBlank(excludePath)){
+            return false;
+        }
+
         if(!excludePath.contains(";")){
             return doMatchExcludePath(absolutePath,excludePath);
         }

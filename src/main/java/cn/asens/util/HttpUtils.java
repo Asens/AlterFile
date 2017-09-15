@@ -36,18 +36,18 @@ import java.util.List;
  * Created by Asens on 2017/9/14
  */
 public class HttpUtils {
-    public static void upload(File file) throws IOException {
+    public static void upload(File file,String uploadPath,String remotePath) throws IOException {
         try(CloseableHttpClient httpclient = HttpClients.createDefault()){
 
-            String message = "This is a multipart post";
+
             HttpEntity reqEntity = MultipartEntityBuilder.create()
                     .setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
                     .addBinaryBody("file", file, ContentType.DEFAULT_BINARY, file.getName())
-                    .addTextBody("text", message, ContentType.DEFAULT_BINARY)
+                    .addTextBody("remotePath", remotePath, ContentType.DEFAULT_BINARY)
                     .build();
 
             HttpUriRequest request = RequestBuilder
-                    .post("http://localhost:8192/upload")
+                    .post(uploadPath)
                     .setEntity(reqEntity)
                     .build();
 
@@ -62,7 +62,6 @@ public class HttpUtils {
             };
 
             String responseBody = httpclient.execute(request, responseHandler);
-            System.out.println("----------------------------------------");
             System.out.println(responseBody);
         }
     }
@@ -71,6 +70,6 @@ public class HttpUtils {
         File file=new File("D:\\project\\WechatTest\\" +
                 "target\\classes\\application.properties");
         System.out.println(file.exists()+"--"+file.canRead());
-        upload(file);
+        upload(file,"http://localhost:8192/upload","C:\\weChatTest\\as.html");
     }
 }

@@ -38,9 +38,24 @@
         <div class="row ui grid" style="padding-top: 40px;">
             <div class="sixteen wide column ">
                 <form id="fr" action="update">
+                    <h4 class="ui header">项目路径</h4>
+                    <div class="ui input" style="width: 40%">
+                        <input placeholder="排除路径" name="basePath" value="${project.basePath!}">
+                    </div>
+
                     <h4 class="ui header">排除路径</h4>
                     <div class="ui input" style="width: 40%">
-                        <input placeholder="exclude path" name="excludePath" value="${project.excludePath!}">
+                        <input placeholder="排除路径" name="excludePath" value="${project.excludePath!}">
+                    </div>
+
+                    <h4 class="ui header">上传路径</h4>
+                    <div class="ui input" style="width: 40%">
+                        <input placeholder="上传路径" name="serverUploadPath" value="${project.serverUploadPath!}">
+                    </div>
+
+                    <h4 class="ui header">服务器文件路径</h4>
+                    <div class="ui input" style="width: 40%">
+                        <input placeholder="服务器文件路径" name="remotePath" value="${project.remotePath!}">
                     </div>
                 </form>
 

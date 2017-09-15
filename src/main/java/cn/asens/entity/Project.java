@@ -31,6 +31,12 @@ public class Project {
     @JoinColumn(name="project_id")
     private Set<ProjectFile> fileSet;
 
+    @Column(name="remote_path")
+    private String remotePath;
+
+    @Column(name="server_upload_path")
+    private String serverUploadPath;
+
     public Integer getId() {
         return id;
     }
@@ -77,5 +83,21 @@ public class Project {
 
     public void setExcludePath(String excludePath) {
         this.excludePath = excludePath;
+    }
+
+    public String getRemotePath() {
+        return remotePath;
+    }
+
+    public void setRemotePath(String remotePath) {
+        this.remotePath = remotePath;
+    }
+
+    public String getServerUploadPath() {
+        return serverUploadPath;
+    }
+
+    public void setServerUploadPath(String serverUploadPath) {
+        this.serverUploadPath = serverUploadPath;
     }
 }

@@ -119,9 +119,12 @@ public class SampleController {
     }
 
     @RequestMapping("/project/{id}/update")
-    public String update(@PathVariable Integer id,String excludePath, HttpServletResponse response,ModelMap model) throws IOException {
+    public String update(@PathVariable Integer id,String basePath,String excludePath,String serverUploadPath,String remotePath, HttpServletResponse response,ModelMap model) throws IOException {
         Project project=projectMng.findById(id);
         project.setExcludePath(excludePath);
+        project.setServerUploadPath(serverUploadPath);
+        project.setRemotePath(remotePath);
+        project.setBasePath(basePath);
         projectMng.update(project);
         return "redirect:/project/"+id;
     }

@@ -76,6 +76,10 @@
 
                 [#if project.excludePath??]<p style="color: #888"> 排除路径 : ${project.excludePath}</p>[/#if]
 
+                [#if project.serverUploadPath??]<p style="color: #888"> 上传路径 : ${project.serverUploadPath}</p>[/#if]
+
+                [#if project.remotePath??]<p style="color: #888"> 服务器文件路径 : ${project.remotePath}</p>[/#if]
+
                 [#if project.initialized==0]
                 <button class="ui primary button" onclick="initProject('${project.id}')">
                     初始化
@@ -117,13 +121,20 @@
 <script>
 
     function pushToServer(id){
+        var load;
         $.ajax({
             url:"/push/"+id,
             data:{
                 id:id
             },
+            beforeSend:function(){
+                load=layer.load(2);
+            },
+            complete:function(){
+                layer.close(load);
+            },
             success:function(data){
-                if(data=='success'){
+                if(data==='success'){
                     layer.msg("推送成功");
                 }else{
                     layer.msg("推送失败");
@@ -189,7 +200,7 @@
     }
 
     $(document).ready(function(){
-//        refreshList();
+        refreshList();
 //        setInterval(function(){
 //            refreshList();
 //        },30000);

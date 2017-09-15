@@ -3,6 +3,7 @@ package cn.asens.controller;
 import cn.asens.entity.Project;
 import cn.asens.entity.ProjectFile;
 import cn.asens.mng.ProjectFileMng;
+import cn.asens.mng.ProjectMng;
 import cn.asens.util.HttpUtils;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -39,6 +40,8 @@ public class FileAct {
 
     @Resource
     private ProjectFileMng projectFileMng;
+    @Resource
+    private ProjectMng projectMng;
 
     @RequestMapping("/download/{fileId}")
     public void download(@PathVariable Integer fileId, HttpServletResponse response, HttpServletRequest request) throws IOException {
@@ -57,10 +60,10 @@ public class FileAct {
     @RequestMapping("/push/{fileId}")
     public void push(@PathVariable Integer fileId, HttpServletResponse response, HttpServletRequest request) throws IOException {
         ProjectFile projectFile=projectFileMng.findById(fileId);
-
+        Project project=projectMng.findById(projectFile.getProjectId());
         File file=new File(projectFile.getAbsolutePath());
         try {
-            HttpUtils.upload(file);
+            HttpUtils.upload(file,project.getServerUploadPath(),relativePath(projectFile,project));
         }catch (IOException e){
             response.getWriter().write("fail,IOException");
             return;
@@ -70,12 +73,24 @@ public class FileAct {
 
     }
 
+    private String relativePath(ProjectFile projectFile, Project project) {
+        return project.getRemotePath()+projectFile.getAbsolutePath().replace(project.getBasePath(),"");
+    }
+
     @RequestMapping("/upload")
-    public void upload(@RequestParam(value = "file", required = false) MultipartFile file, HttpServletRequest request, HttpServletResponse response) throws IOException, FileUploadException, org.apache.commons.fileupload.FileUploadException {
-        log.info(file);
-        File tmpFile=new File("D:\\test\\"+file.getOriginalFilename());
-        file.transferTo(tmpFile);
-        response.getWriter().write("success");
+    public void upload(@RequestParam(value = "file", required = false) MultipartFile file,String remotePath, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        log.info("remotePath : "+remotePath);
+        remotePath=remotePath.replace("\\",File.separator);
+        File tmpFile=new File(remotePath);
+        if(!tmpFile.exists()) tmpFile.getParentFile().mkdirs();
+
+        try {
+            file.transferTo(tmpFile);
+            response.getWriter().write("success");
+        } catch (IOException e) {
+            response.getWriter().write("fail IOException");
+        }
+
     }
 
 }

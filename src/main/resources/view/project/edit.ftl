@@ -62,6 +62,9 @@
                 <button class="ui primary button" style="margin-top: 50px;" onclick="submitForm()">
                     保存
                 </button>
+                <button class="ui yellow button" style="margin-top: 50px;" onclick="location.href='/project/${project.id}'">
+                    返回
+                </button>
             </div>
         </div>
 

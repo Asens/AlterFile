@@ -28,9 +28,9 @@ public class TomcatUtils {
 
     private final static String PASSWORD = "aaaaaa";
 
-    public static boolean reload() throws IOException {
-        URL url = new URL(RELOAD_URL);
-        String userPassword = USERNAME + ":" + PASSWORD;
+    public static boolean reload(String username,String password,String reloadPath) throws IOException {
+        URL url = new URL(reloadPath);
+        String userPassword = username + ":" + password;
         String encoding = new sun.misc.BASE64Encoder().encode(userPassword.getBytes());
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestProperty("Authorization", "Basic " + encoding);

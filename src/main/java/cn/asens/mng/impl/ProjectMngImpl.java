@@ -87,7 +87,7 @@ public class ProjectMngImpl implements ProjectMng {
         List<File> curList=new ArrayList<>();
         scanFile(new File(project.getBasePath()),curList,project.getExcludePath());
         List<ProjectFile> list=projectFileDao.getListByProjectId(project.getId());
-        List<ProjectFile> newList=projectFileDao.getNewList();
+        List<ProjectFile> newList=projectFileDao.getNewList(project.getId());
         List<ProjectFile> resultList;
         if(newList!=null&&newList.size()>0){
             resultList=new ArrayList<>(newList);

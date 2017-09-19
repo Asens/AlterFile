@@ -53,9 +53,10 @@ public class ProjectFileDaoImpl extends BaseDaoImpl implements ProjectFileDao{
     }
 
     @Override
-    public List<ProjectFile> getNewList() {
-        return getSession().createQuery("from ProjectFile bean where bean.status=:status")
+    public List<ProjectFile> getNewList(Integer projectId) {
+        return getSession().createQuery("from ProjectFile bean where bean.status=:status and bean.projectId=:projectId")
                 .setParameter("status",ProjectFile.STATUS_ADD)
+                .setParameter("projectId",projectId)
                 .list();
     }
 

@@ -20,7 +20,7 @@ public interface ProjectFileDao {
 
     void updateAllToDefault(Integer projectId);
 
-    List<ProjectFile> getNewList();
+    List<ProjectFile> getNewList(Integer projectId);
 
     List<ProjectFile> getModifyList(Integer projectId);
 }

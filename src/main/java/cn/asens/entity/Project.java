@@ -37,10 +37,13 @@ public class Project {
     @Column(name="server_upload_path")
     private String serverUploadPath;
 
+    @Column(name="tomcat_username")
     private String tomcatUsername;
 
+    @Column(name="tomcat_password")
     private String tomcatPassword;
 
+    @Column(name="reload_path")
     private String reloadPath;
 
 
@@ -107,5 +110,29 @@ public class Project {
 
     public void setServerUploadPath(String serverUploadPath) {
         this.serverUploadPath = serverUploadPath;
+    }
+
+    public String getTomcatUsername() {
+        return tomcatUsername;
+    }
+
+    public void setTomcatUsername(String tomcatUsername) {
+        this.tomcatUsername = tomcatUsername;
+    }
+
+    public String getTomcatPassword() {
+        return tomcatPassword;
+    }
+
+    public void setTomcatPassword(String tomcatPassword) {
+        this.tomcatPassword = tomcatPassword;
+    }
+
+    public String getReloadPath() {
+        return reloadPath;
+    }
+
+    public void setReloadPath(String reloadPath) {
+        this.reloadPath = reloadPath;
     }
 }

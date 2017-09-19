@@ -57,6 +57,21 @@
                     <div class="ui input" style="width: 40%">
                         <input placeholder="服务器文件路径" name="remotePath" value="${project.remotePath!}">
                     </div>
+
+                    <h4 class="ui header">服务器管理员用户名</h4>
+                    <div class="ui input" style="width: 40%">
+                        <input placeholder="服务器管理员用户名" name="tomcatUsername" value="${project.tomcatUsername!}">
+                    </div>
+
+                    <h4 class="ui header">服务器管理员密码</h4>
+                    <div class="ui input" style="width: 40%">
+                        <input placeholder="服务器管理员密码" name="tomcatPassword" value="${project.tomcatPassword!}">
+                    </div>
+
+                    <h4 class="ui header">服务器重启路径</h4>
+                    <div class="ui input" style="width: 40%">
+                        <input placeholder="服务器重启路径" name="reloadPath" value="${project.reloadPath!}">
+                    </div>
                 </form>
 
                 <button class="ui primary button" style="margin-top: 50px;" onclick="submitForm()">

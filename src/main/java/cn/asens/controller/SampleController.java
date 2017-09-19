@@ -8,6 +8,8 @@ import cn.asens.entity.ProjectFile;
 import cn.asens.entity.User;
 import cn.asens.mng.ProjectFileMng;
 import cn.asens.mng.ProjectMng;
+import cn.asens.util.StringUtils;
+import cn.asens.util.TomcatUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -136,14 +138,33 @@ public class SampleController {
     }
 
     @RequestMapping("/project/{id}/update")
-    public String update(@PathVariable Integer id,String basePath,String excludePath,String serverUploadPath,String remotePath, HttpServletResponse response,ModelMap model) throws IOException {
+    public String update(@PathVariable Integer id,String tomcatUsername,String tomcatPassword,String reloadPath,String basePath,String excludePath,String serverUploadPath,String remotePath, HttpServletResponse response,ModelMap model) throws IOException {
         Project project=projectMng.findById(id);
         project.setExcludePath(excludePath);
         project.setServerUploadPath(serverUploadPath);
         project.setRemotePath(remotePath);
         project.setBasePath(basePath);
+        project.setTomcatUsername(tomcatUsername);
+        project.setTomcatPassword(tomcatPassword);
+        project.setReloadPath(reloadPath);
         projectMng.update(project);
         return "redirect:/project/"+id;
+    }
+
+    @RequestMapping("/project/{id}/reload")
+    public void reload(@PathVariable Integer id, HttpServletResponse response,ModelMap model) throws IOException {
+        Project project=projectMng.findById(id);
+        if(StringUtils.isBlank(project.getTomcatUsername())||
+                StringUtils.isBlank(project.getTomcatPassword())||
+                StringUtils.isBlank(project.getReloadPath())){
+            response.getWriter().write("not config");
+        }
+        boolean b=TomcatUtils.reload(project.getTomcatUsername(),project.getTomcatPassword(),project.getReloadPath());
+        if(b){
+            response.getWriter().write("success");
+        }else{
+            response.getWriter().write("fail");
+        }
     }
 
 

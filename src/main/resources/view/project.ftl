@@ -80,6 +80,12 @@
 
                 [#if project.remotePath??]<p style="color: #888"> 服务器文件路径 : ${project.remotePath}</p>[/#if]
 
+            [#if project.tomcatUsername??]<p style="color: #888"> 服务器管理员用户名 : ${project.tomcatUsername}</p>[/#if]
+
+            [#if project.tomcatPassword??]<p style="color: #888"> 服务器管理员密码 : ${project.tomcatPassword}</p>[/#if]
+
+            [#if project.reloadPath??]<p style="color: #888"> 服务器重启路径 : ${project.reloadPath}</p>[/#if]
+
                 [#if project.initialized==0]
                 <button class="ui primary button" onclick="initProject('${project.id}')">
                     初始化
@@ -105,6 +111,9 @@
                 </button>
                 <button class="ui yellow button" onclick="pushAll()">
                     全部推送
+                </button>
+                <button class="ui purple button" onclick="reloadTomcat()">
+                    重启服务器
                 </button>
                 <h4 class="ui header">新增列表</h4>
                 <div id="newList" style="margin-top: 30px;"></div>
@@ -139,6 +148,28 @@
                     $("#file_"+id).css("color","#00aaaa");
                 }else{
                     layer.msg("推送失败");
+                }
+            }
+        })
+    }
+
+    function reloadTomcat(){
+        var load;
+        var id=$("#projectId").val();
+        $.ajax({
+            url:"/project/"+id+"/reload",
+            beforeSend:function(){
+                load=layer.load(2);
+            },complete:function(){
+                layer.close(load);
+            },
+            success:function(data){
+                if(data==="success"){
+                    layer.msg("命令发送成功,服务器重启中");
+                }else if(data==="fail"){
+                    layer.msg("网络错误,服务器配置错误或服务器未启动")
+                }else{
+                    layer.msg("请先配置tomcat")
                 }
             }
         })

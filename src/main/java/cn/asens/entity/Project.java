@@ -37,6 +37,14 @@ public class Project {
     @Column(name="server_upload_path")
     private String serverUploadPath;
 
+    private String tomcatUsername;
+
+    private String tomcatPassword;
+
+    private String reloadPath;
+
+
+
     public Integer getId() {
         return id;
     }

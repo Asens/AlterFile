@@ -100,10 +100,10 @@
                 <button class="ui teal button" onclick="location.href='/project/${project.id}/edit'">
                     配置
                 </button>
-                <button class="ui orange button" onclick="cancelAll()">
+                <button class="ui orange button" onclick="">
                     生成更新文档
                 </button>
-                <button class="ui yellow button" onclick="">
+                <button class="ui yellow button" onclick="pushAll()">
                     全部推送
                 </button>
                 <h4 class="ui header">新增列表</h4>
@@ -136,9 +136,45 @@
             success:function(data){
                 if(data==='success'){
                     layer.msg("推送成功");
+                    $("#file_"+id).css("color","#00aaaa");
                 }else{
                     layer.msg("推送失败");
                 }
+            }
+        })
+    }
+
+    function pushAll(){
+        var id=$("#projectId").val();
+        var load;
+        $.ajax({
+            url:"/pushAll/"+id,
+            dataType:"json",
+            beforeSend:function(){
+                load=layer.load(2);
+            },complete:function(){
+                layer.close(load);
+            },success:function(data){
+                var arr=data.files;
+                for(var i=0;i<arr.length;i++){
+                    $("#file_"+arr[i]).css("color","#00aaaa");
+                }
+                if(data.total===data.sent){
+                    layer.msg("全部推送成功");
+                }else{
+                    layer.msg("共"+data.total+"个文件,已传送"+data.sent+"个");
+                }
+
+            }
+        })
+    }
+
+    function cancelFile(fileId){
+        $.ajax({
+            url:"/cancelFile/"+fileId,
+            success:function(data){
+                layer.msg("还原成功");
+                refreshList();
             }
         })
     }
@@ -180,9 +216,15 @@
     }
 
     function getChangeList(){
+        var load;
         var id=$("#projectId").val();
         $.ajax({
             url:"/project/"+id+"/changeList",
+            beforeSend:function(){
+                load=layer.load(2);
+            },complete:function(){
+                layer.close(load);
+            },
             success:function(data){
                 $("#changeList").html(data);
             }
@@ -190,9 +232,15 @@
     }
 
     function getNewList(){
+        var load;
         var id=$("#projectId").val();
         $.ajax({
             url:"/project/"+id+"/newList",
+            beforeSend:function(){
+                load=layer.load(2);
+            },complete:function(){
+                layer.close(load);
+            },
             success:function(data){
                 $("#newList").html(data);
             }

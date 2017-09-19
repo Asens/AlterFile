@@ -8,7 +8,7 @@
 
     <Properties>
         <!-- 配置日志文件输出目录 -->
-        <Property name="LOG_HOME">D://logs</Property>
+        <Property name="LOG_HOME">C://weChatTest//AlterFileLogs</Property>
     </Properties>
 
     <Appenders>

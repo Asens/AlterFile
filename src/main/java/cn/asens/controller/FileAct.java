@@ -11,6 +11,8 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +30,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -70,6 +73,33 @@ public class FileAct {
         }
 
         response.getWriter().write("success");
+
+    }
+
+    @RequestMapping("/pushAll/{id}")
+    public void pushAll(@PathVariable Integer id, HttpServletResponse response, HttpServletRequest request) throws IOException {
+        Project project=projectMng.findById(id);
+        List<ProjectFile> newList=projectMng.newList(project);
+        List<ProjectFile> changeList=projectMng.changeList(project);
+        List<ProjectFile> list=new ArrayList<>(newList);
+        list.addAll(changeList);
+        List<Integer> successList=new ArrayList<>();
+        for(ProjectFile pf:list){
+            try {
+                HttpUtils.upload(new File(pf.getAbsolutePath()),project.getServerUploadPath(),relativePath(pf,project));
+                successList.add(pf.getId());
+            }catch (IOException ignore){}
+        }
+        JSONObject result=new JSONObject();
+        JSONArray array=new JSONArray();
+        successList.forEach(array::put);
+        result.put("files",array);
+        result.put("total",list.size());
+        result.put("sent",successList.size());
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("utf-8");
+        response.getWriter().write(result.toString());
 
     }
 

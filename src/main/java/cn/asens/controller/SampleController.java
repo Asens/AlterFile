@@ -38,6 +38,8 @@ public class SampleController {
 
     @Resource
     private ProjectMng projectMng;
+    @Resource
+    private ProjectFileMng projectFileMng;
 
 
 
@@ -46,6 +48,11 @@ public class SampleController {
         List<Project> list=projectMng.getList();
         model.put("list",list);
         return "main";
+    }
+
+    @RequestMapping("/test")
+    public void test(HttpServletResponse response) throws IOException {
+        response.getWriter().write("success");
     }
 
     @RequestMapping("/project/add")
@@ -111,6 +118,16 @@ public class SampleController {
         response.getWriter().write("success");
     }
 
+    @RequestMapping("cancelFile/{fileId}")
+    public void cancelFile(@PathVariable Integer fileId, HttpServletResponse response,ModelMap model) throws IOException {
+        ProjectFile pf=projectFileMng.findById(fileId);
+        File file=new File(pf.getAbsolutePath());
+        pf.setStatus(ProjectFile.STATUS_DEFAULT);
+        pf.setLastModify(file.lastModified());
+        projectFileMng.update(pf);
+        response.getWriter().write("success");
+    }
+
     @RequestMapping("/project/{id}/edit")
     public String edit(@PathVariable Integer id, HttpServletResponse response,ModelMap model) throws IOException {
         Project project=projectMng.findById(id);
@@ -128,6 +145,8 @@ public class SampleController {
         projectMng.update(project);
         return "redirect:/project/"+id;
     }
+
+
 
 
 

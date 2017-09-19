@@ -28,4 +28,9 @@ public class ProjectFileMngImpl implements ProjectFileMng{
     public ProjectFile findById(Integer fileId) {
         return projectFileDao.findById(fileId);
     }
+
+    @Override
+    public void update(ProjectFile pf) {
+        projectFileDao.update(pf);
+    }
 }

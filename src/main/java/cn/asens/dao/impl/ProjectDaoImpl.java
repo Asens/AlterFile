@@ -34,6 +34,7 @@ public class ProjectDaoImpl extends BaseDaoImpl implements ProjectDao{
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<Project> getList() {
         return getSession().createQuery("from Project").list();
     }

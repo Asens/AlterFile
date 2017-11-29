@@ -95,7 +95,7 @@ public class SampleController {
             List<ProjectFile> list=projectMng.changeList(project);
             model.put("list",list);
         }catch (Exception e){
-            response.getWriter().write("fail");
+            response.getWriter().write("fail:"+e.getMessage());
             return null;
         }
         return "project/changeList";
@@ -108,7 +108,7 @@ public class SampleController {
             List<ProjectFile> list=projectMng.newList(project);
             model.put("list",list);
         }catch (Exception e){
-            response.getWriter().write("fail");
+            response.getWriter().write("fail:"+e.getMessage());
             return null;
         }
         return "project/newList";

@@ -247,14 +247,14 @@
     }
 
     function getChangeList(){
-        var load;
+        var change;
         var id=$("#projectId").val();
         $.ajax({
             url:"/project/"+id+"/changeList",
             beforeSend:function(){
-                load=layer.load(2);
+                change=layer.load(2);
             },complete:function(){
-                layer.close(load);
+                layer.close(change);
             },
             success:function(data){
                 $("#changeList").html(data);

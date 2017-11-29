@@ -10,10 +10,12 @@ import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -24,6 +26,39 @@ import static java.util.stream.Collectors.toList;
 @Transactional
 @Service
 public class ProjectMngImpl implements ProjectMng {
+    private static Map<String,List<File>> fileListMap=new ConcurrentHashMap<>();
+    private static Map<String,String> excludeMap=new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void init(){
+        ExecutorService es= Executors.newSingleThreadExecutor();
+        es.execute(new FileThread());
+    }
+
+    class FileThread extends Thread{
+
+        @Override
+        public void run(){
+            while(true){
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                fileListMap.forEach((root,fileList)->{
+                    List<File> curList=new ArrayList<>();
+                    try {
+                        scanFile(new File(root),curList,excludeMap.get(root));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    fileListMap.put(root,curList);
+                });
+            }
+        }
+    }
+
     @Resource
     private ProjectDao projectDao;
 
@@ -67,7 +102,8 @@ public class ProjectMngImpl implements ProjectMng {
 
         List<File> list=new ArrayList<>();
         scanFile(file,list,project.getExcludePath());
-        list.forEach(projectFile->saveProjectFile(projectFile,project,ProjectFile.STATUS_DEFAULT)) ;
+        list.forEach(projectFile->saveProjectFile(projectFile,project,
+                ProjectFile.STATUS_DEFAULT)) ;
         project.setInitialized(Project.HAS_INITIALIZED);
         projectDao.update(project);
     }
@@ -76,18 +112,59 @@ public class ProjectMngImpl implements ProjectMng {
 
     @Override
     public List<ProjectFile> changeList(Project project) throws IOException {
-        List<File> curList=new ArrayList<>();
-        scanFile(new File(project.getBasePath()),curList,project.getExcludePath());
         List<ProjectFile> list=projectFileDao.getListByProjectId(project.getId());
-        return list.stream().filter(projectFile->isChange(projectFile,curList)).collect(toList());
+        List<ProjectFile> result=new ArrayList<>();
+
+        List<File> fileList=fileListMap.get(project.getBasePath());
+        if(fileList.size()>0){
+            Map<String,File> map=new HashMap<>(fileList.size()+1);
+            fileList.forEach(f->map.put(f.getAbsolutePath(),f));
+            list.forEach(pf->{
+                String path=pf.getAbsolutePath();
+                long time=pf.getLastModify();
+                File file=map.get(path);
+
+                if(file!=null&&file.exists()&&file.lastModified()!=time
+                        &&!matchExcludePath(file.getAbsolutePath(),
+                        project.getExcludePath())){
+                    result.add(pf);
+                }
+            });
+        }else{
+            list.forEach(pf->{
+                String path=pf.getAbsolutePath();
+                long time=pf.getLastModify();
+
+                File file=new File(path);
+                if(file.exists()&&file.lastModified()!=time
+                        &&!matchExcludePath(file.getAbsolutePath(),project.getExcludePath())){
+                    result.add(pf);
+                }
+            });
+        }
+
+        return result;
     }
+
+
 
     @Override
     public List<ProjectFile> newList(Project project) throws IOException {
-        List<File> curList=new ArrayList<>();
-        scanFile(new File(project.getBasePath()),curList,project.getExcludePath());
+        List<File> curList;
+
+        if(!fileListMap.containsKey(project.getBasePath())||
+                (curList=fileListMap.get(project.getBasePath())).size()==0){
+            excludeMap.put(project.getBasePath(),project.getExcludePath());
+            fileListMap.put(project.getBasePath(),new ArrayList<>());
+            curList=new ArrayList<>();
+            scanFile(new File(project.getBasePath()),curList,project.getExcludePath());
+        }
+
+
         List<ProjectFile> list=projectFileDao.getListByProjectId(project.getId());
         List<ProjectFile> newList=projectFileDao.getNewList(project.getId());
+
+
         List<ProjectFile> resultList;
         if(newList!=null&&newList.size()>0){
             resultList=new ArrayList<>(newList);
@@ -99,8 +176,11 @@ public class ProjectMngImpl implements ProjectMng {
             return resultList;
         }
 
+        Map<String,ProjectFile> map=new HashMap<>(list.size()+1);
+        list.forEach(pf-> map.put(pf.getAbsolutePath(),pf));
+
         for(File file:curList){
-            if(!fileInList(file,list)){
+            if(!map.containsKey(file.getAbsolutePath())){
                 ProjectFile pf=saveProjectFile(file,project,ProjectFile.STATUS_ADD);
                 resultList.add(pf);
             }
@@ -135,7 +215,8 @@ public class ProjectMngImpl implements ProjectMng {
         return false;
     }
 
-    private ProjectFile saveProjectFile(File projectFile,Project project,Integer status) {
+    private ProjectFile saveProjectFile(File projectFile,Project project,
+                                        Integer status) {
         ProjectFile pf=new ProjectFile();
         pf.setAbsolutePath(projectFile.getAbsolutePath());
         pf.setFileName(projectFile.getName());
@@ -146,7 +227,8 @@ public class ProjectMngImpl implements ProjectMng {
         return pf;
     }
 
-    private void scanFile(File file, List<File> list,String excludePath) throws IOException {
+    private void scanFile(File file, List<File> list,String excludePath)
+            throws IOException {
         if(file.isDirectory()){
             File[] files = file.listFiles();
             if(files==null) throw new IOException();

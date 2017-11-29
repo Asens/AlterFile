@@ -41,6 +41,7 @@ public class ProjectFileDaoImpl extends BaseDaoImpl implements ProjectFileDao{
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<ProjectFile> getListByProjectId(Integer id) {
         return getSession().createQuery("from ProjectFile bean where bean.projectId=:id")
                 .setParameter("id",id)
@@ -53,6 +54,7 @@ public class ProjectFileDaoImpl extends BaseDaoImpl implements ProjectFileDao{
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<ProjectFile> getNewList(Integer projectId) {
         return getSession().createQuery("from ProjectFile bean where bean.status=:status and bean.projectId=:projectId")
                 .setParameter("status",ProjectFile.STATUS_ADD)
@@ -61,6 +63,7 @@ public class ProjectFileDaoImpl extends BaseDaoImpl implements ProjectFileDao{
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<ProjectFile> getModifyList(Integer projectId) {
         return getSession().createQuery("from ProjectFile bean where bean.status=:status")
                 .setParameter("status",ProjectFile.STATUS_MODIFY)

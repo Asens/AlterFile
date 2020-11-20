@@ -6,18 +6,19 @@ import cn.asens.entity.Project;
 import cn.asens.entity.ProjectFile;
 import cn.asens.mng.ProjectMng;
 import cn.asens.util.StringUtils;
-import org.springframework.stereotype.Repository;
+import lombok.extern.log4j.Log4j2;
+import org.apache.commons.codec.binary.Hex;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.*;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * @author Asens
@@ -25,9 +26,10 @@ import static java.util.stream.Collectors.toList;
  **/
 @Transactional
 @Service
+@Log4j2
 public class ProjectMngImpl implements ProjectMng {
-    private static Map<String,List<File>> fileListMap=new ConcurrentHashMap<>();
-    private static Map<String,String> excludeMap=new ConcurrentHashMap<>();
+    private final static Map<String,List<File>> FILE_LIST_MAP =new ConcurrentHashMap<>();
+    private final static Map<String,String> EXCLUDE_MAP =new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init(){
@@ -46,14 +48,14 @@ public class ProjectMngImpl implements ProjectMng {
                     e.printStackTrace();
                 }
 
-                fileListMap.forEach((root,fileList)->{
+                FILE_LIST_MAP.forEach((root, fileList)->{
                     List<File> curList=new ArrayList<>();
                     try {
-                        scanFile(new File(root),curList,excludeMap.get(root));
+                        scanFile(new File(root),curList, EXCLUDE_MAP.get(root));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    fileListMap.put(root,curList);
+                    FILE_LIST_MAP.put(root,curList);
                 });
             }
         }
@@ -111,34 +113,42 @@ public class ProjectMngImpl implements ProjectMng {
 
 
     @Override
-    public List<ProjectFile> changeList(Project project) throws IOException {
+    public List<ProjectFile> changeList(Project project) {
         List<ProjectFile> list=projectFileDao.getListByProjectId(project.getId());
         List<ProjectFile> result=new ArrayList<>();
 
-        List<File> fileList=fileListMap.get(project.getBasePath());
+        List<File> fileList= FILE_LIST_MAP.get(project.getBasePath());
         if(fileList.size()>0){
             Map<String,File> map=new HashMap<>(fileList.size()+1);
             fileList.forEach(f->map.put(f.getAbsolutePath(),f));
             list.forEach(pf->{
                 String path=pf.getAbsolutePath();
                 long time=pf.getLastModify();
+                String md5=pf.getMd5();
                 File file=map.get(path);
 
-                if(file!=null&&file.exists()&&file.lastModified()!=time
-                        &&!matchExcludePath(file.getAbsolutePath(),
-                        project.getExcludePath())){
-                    result.add(pf);
+                if(file!=null&&file.exists()&&file.lastModified()!=time &&
+                        !matchExcludePath(file.getAbsolutePath(), project.getExcludePath())){
+                    if(!Objects.equals(fileMd5(file),md5)){
+                        result.add(pf);
+                        pf.setStatus(ProjectFile.STATUS_MODIFY);
+                        projectFileDao.update(pf);
+                    }
                 }
             });
         }else{
             list.forEach(pf->{
                 String path=pf.getAbsolutePath();
                 long time=pf.getLastModify();
-
+                String md5=pf.getMd5();
                 File file=new File(path);
                 if(file.exists()&&file.lastModified()!=time
                         &&!matchExcludePath(file.getAbsolutePath(),project.getExcludePath())){
-                    result.add(pf);
+                    if(!Objects.equals(fileMd5(file),md5)){
+                        result.add(pf);
+                        pf.setStatus(ProjectFile.STATUS_MODIFY);
+                        projectFileDao.update(pf);
+                    }
                 }
             });
         }
@@ -152,10 +162,10 @@ public class ProjectMngImpl implements ProjectMng {
     public List<ProjectFile> newList(Project project) throws IOException {
         List<File> curList;
 
-        if(!fileListMap.containsKey(project.getBasePath())||
-                (curList=fileListMap.get(project.getBasePath())).size()==0){
-            excludeMap.put(project.getBasePath(),project.getExcludePath());
-            fileListMap.put(project.getBasePath(),new ArrayList<>());
+        if(!FILE_LIST_MAP.containsKey(project.getBasePath())||
+                (curList= FILE_LIST_MAP.get(project.getBasePath())).size()==0){
+            EXCLUDE_MAP.put(project.getBasePath(),project.getExcludePath());
+            FILE_LIST_MAP.put(project.getBasePath(),new ArrayList<>());
             curList=new ArrayList<>();
             scanFile(new File(project.getBasePath()),curList,project.getExcludePath());
         }
@@ -199,20 +209,12 @@ public class ProjectMngImpl implements ProjectMng {
             for(File file:curList){
                 if(file.getAbsolutePath().equals(projectFile.getAbsolutePath())){
                     projectFile.setLastModify(file.lastModified());
+                    projectFile.setMd5(fileMd5(file));
                     projectFileDao.update(projectFile);
                 }
             }
         });
         projectFileDao.updateAllToDefault(projectId);
-    }
-
-    private boolean fileInList(File file,List<ProjectFile> list){
-        for(ProjectFile pf:list){
-            if(pf.getAbsolutePath().equals(file.getAbsolutePath())){
-                return true;
-            }
-        }
-        return false;
     }
 
     private ProjectFile saveProjectFile(File projectFile,Project project,
@@ -223,15 +225,43 @@ public class ProjectMngImpl implements ProjectMng {
         pf.setLastModify(projectFile.lastModified());
         pf.setStatus(status);
         pf.setProjectId(project.getId());
+        pf.setMd5(fileMd5(projectFile));
         projectFileDao.save(pf);
         return pf;
+    }
+
+    private String fileMd5(File file) {
+        FileInputStream fileInputStream = null;
+        try {
+            MessageDigest MD5 = MessageDigest.getInstance("MD5");
+            fileInputStream = new FileInputStream(file);
+            byte[] buffer = new byte[8192];
+            int length;
+            while ((length = fileInputStream.read(buffer)) != -1) {
+                MD5.update(buffer, 0, length);
+            }
+            return new String(Hex.encodeHex(MD5.digest()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                if (fileInputStream != null){
+                    fileInputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void scanFile(File file, List<File> list,String excludePath)
             throws IOException {
         if(file.isDirectory()){
             File[] files = file.listFiles();
-            if(files==null) throw new IOException();
+            if(files==null) {
+                throw new IOException();
+            }
             for(File child:files){
                 scanFile(child,list,excludePath);
             }
@@ -254,7 +284,9 @@ public class ProjectMngImpl implements ProjectMng {
 
         String[] arr=excludePath.split(";");
         for(String ex:arr){
-            if(StringUtils.isBlank(ex)) continue;
+            if(StringUtils.isBlank(ex)) {
+                continue;
+            }
             if(doMatchExcludePath(absolutePath,ex)){
                 return true;
             }
@@ -267,20 +299,6 @@ public class ProjectMngImpl implements ProjectMng {
         if(ex.startsWith("*.")){
             ex=ex.replace("*","");
             return absolutePath.endsWith(ex);
-        }
-        return false;
-    }
-
-    private boolean isChange(ProjectFile projectFile, List<File> list) {
-        for(File file:list){
-            if(file.getAbsolutePath().equals(projectFile.getAbsolutePath())){
-                if(file.lastModified() != projectFile.getLastModify()){
-                    projectFile.setStatus(ProjectFile.STATUS_MODIFY);
-                    projectFileDao.update(projectFile);
-                    return true;
-                }
-
-            }
         }
         return false;
     }

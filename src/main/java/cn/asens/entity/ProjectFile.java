@@ -29,6 +29,9 @@ public class ProjectFile {
     private Long lastModify;
 
     @Column
+    private String md5;
+
+    @Column
     private Integer status;
 
     @Column(name="project_id")
@@ -80,5 +83,13 @@ public class ProjectFile {
 
     public void setProjectId(Integer projectId) {
         this.projectId = projectId;
+    }
+
+    public String getMd5() {
+        return md5;
+    }
+
+    public void setMd5(String md5) {
+        this.md5 = md5;
     }
 }
